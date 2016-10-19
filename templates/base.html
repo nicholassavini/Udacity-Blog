@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Intro to Backend Blog</title>
+    <link href="/static/css/bootstrap.css" rel="stylesheet">
+    <link href="/static/css/style.css" rel="stylesheet">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <meta charset="utf-8">
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <h1 class="col-md-6">Intro to Backend Blog</h1>
+            <div class="col-md-6">
+                <p class="username text-right">
+                    {% if user %}
+                        {{user.name}} (<a class="login-link" href="/logout">logout</a>)
+                    {% else %}
+                        <a class="login-link" href="/login">login</a>
+                        |
+                        <a class="login-link" href="/signup">signup</a>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+        {% block content %}
+        {% endblock %}
+    </div>
+</body>
+</html>
