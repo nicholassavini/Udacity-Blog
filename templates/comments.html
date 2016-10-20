@@ -1,13 +1,32 @@
+<!-- make sure to change style for a tag here -->
+<a name="comments"><h3>Comments</h3></a>
+{% for c in comments %}
+    <div class="row">
+        <div class="col-md-12">
+            <hr>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <h4>{{c.comment_title}}</h4>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            Posted by <strong>{{c.username}}</strong> on {{c.comment_date.strftime("%b %d, %Y")}}
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+            <p>{{c.comment_text}}</p>
+        </div>
+    </div>
+{% endfor %}
 <div class="row">
     <div class="col-md-12">
       <hr>
     </div>
 </div>
-{% for c in comments %}
-    <h3>{{c.comment_title}}</h3>
-    <p>{{c.comment_text}}</p>
-{% endfor %}
-<h3>Comments</h3>
   <form method="post" action="/{{p.key.id()}}/addcomment">
   <div class="form-group">
     <label for="comment_title">Title</label>

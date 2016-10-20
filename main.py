@@ -113,7 +113,7 @@ def get_post(post_id):
         return post
 
 def get_comments(post_id):
-        comments = Comment.query(Comment.post_id == post_id)
+        comments = Comment.query(Comment.post_id == post_id).order(Comment.comment_date)
         return comments
 
 class Permalink(Handler):
@@ -341,11 +341,6 @@ class AddComment(Handler):
         else:
             self.redirect("/login")
 
-class ViewComments(Handler):
-    def get(self, post_id):
-        comments = Comment.query(Comment.post_id == post_idiu)
-        return comments
-
 # make sure to create redirect success page
 class Welcome(Handler):
     def get(self):
@@ -362,7 +357,6 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/like', LikePost),
                                ('/([0-9]+)/unlike', UnlikePost),
                                ('/([0-9]+)/addcomment', AddComment),
-                               ('/([0-9]+)/comments', ViewComments),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/welcome', Welcome),
