@@ -310,27 +310,29 @@ class Logout(Handler):
 #### Comment Stuff
 
 class Comment(ndb.Model):
-    username = db.StringProperty(required = True)
-    comment = db.StringProperty(required = True)
-    post_id = db.StringProperty(required = True)
+    username = ndb.StringProperty(required = True)
+    comment_title = ndb.StringProperty(required = True)
+    comment_text = ndb.TextProperty(required = True)
+    post_id = ndb.StringProperty(required = True)
     comment_date = ndb.DateTimeProperty(auto_now_add = True)
 
 class AddComment(Handler):
-    def post(self):
+    def post(self, post_id):
         if self.user:
             username = self.user.name
-            comment = self.request.get("comment")
-            post_id = self.p.key.id()
+            comment_title = self.request.get("comment_title")
+            comment_text = self.request.get("comment_text")
+            post_id = post_id
 
-            if comment:
-                c = Comment(username = username, comment = comment,
-                            post_id = post_id)
+            if comment_title and comment_text:
+                c = Comment(username = username, comment_title = comment_title,
+                            comment_text = comment_text, post_id = post_id)
                 c.put()
                 # change this to redirect to post page
                 self.redirect("/")
             else:
                 error = "Can't post blank comment!"
-                self.render("newpost.html", post_title=post_title, post_text=post_text, error=error)
+                #self.render("newpost.html", post_title=post_title, post_text=post_text, error=error)
         else:
             self.redirect("/login")
 
@@ -349,6 +351,7 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/delete', DeletePost),
                                ('/([0-9]+)/like', LikePost),
                                ('/([0-9]+)/unlike', UnlikePost),
+                               ('/([0-9]+)/addcomment', AddComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/welcome', Welcome),
