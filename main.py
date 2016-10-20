@@ -333,11 +333,10 @@ class AddComment(Handler):
                 c = Comment(username = username, comment_title = comment_title,
                             comment_text = comment_text, post_id = post_id)
                 c.put()
-                # change this to redirect to post page
-                self.redirect("/")
+                self.redirect("/%s" % str(post_id))
             else:
                 error = "Can't post blank comment!"
-                #self.render("newpost.html", post_title=post_title, post_text=post_text, error=error)
+                #self.render(".html", post_title=post_title, post_text=post_text, error=error)
         else:
             self.redirect("/login")
 
