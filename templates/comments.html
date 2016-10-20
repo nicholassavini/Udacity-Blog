@@ -3,6 +3,10 @@
       <hr>
     </div>
 </div>
+{% for c in comments %}
+    <h3>{{c.comment_title}}</h3>
+    <p>{{c.comment_text}}</p>
+{% endfor %}
 <h3>Comments</h3>
   <form method="post" action="/{{p.key.id()}}/addcomment">
   <div class="form-group">
