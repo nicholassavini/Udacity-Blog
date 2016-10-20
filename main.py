@@ -112,14 +112,19 @@ def get_post(post_id):
         post = ndb.Key('Post', int(post_id)).get()
         return post
 
+def get_comments(post_id):
+        comments = Comment.query(Comment.post_id == post_id)
+        return comments
+
 class Permalink(Handler):
     def get(self, post_id):
         post = get_post(post_id)
+        comments = get_comments(post_id)
         if not post:
             self.error(404)
             return
 
-        self.render("permalink.html", p=post)
+        self.render("permalink.html", p=post, comments=comments)
 
 class EditPost(Handler):
     def get(self, post_id):
@@ -338,8 +343,9 @@ class AddComment(Handler):
 
 class ViewComments(Handler):
     def get(self, post_id):
-        comments = Comment.query(Comment.post_id == post_id)
-        self.render("comments.html", comments = comments)
+        comments = Comment.query(Comment.post_id == post_idiu)
+        return comments
+
 # make sure to create redirect success page
 class Welcome(Handler):
     def get(self):
