@@ -108,17 +108,18 @@ class AddPost(Handler):
         else:
             self.redirect("/login")
 
-def get_post(post_id):
-        post = ndb.Key('Post', int(post_id)).get()
+def get_item(item_type, item_id):
+        post = ndb.Key(item_type, int(item_id)).get()
         return post
 
 def get_comments(post_id):
         comments = Comment.query(Comment.post_id == post_id).order(Comment.comment_date)
         return comments
 
+
 class Permalink(Handler):
     def get(self, post_id):
-        post = get_post(post_id)
+        post = get_item('Post', post_id)
         comments = get_comments(post_id)
         if not post:
             self.error(404)
@@ -128,7 +129,7 @@ class Permalink(Handler):
 
 class EditPost(Handler):
     def get(self, post_id):
-        post = get_post(post_id)
+        post = get_item('Post', post_id)
         if post.created_by == self.user.name:
             self.render('edit_post.html', post=post)
         else:
@@ -137,7 +138,7 @@ class EditPost(Handler):
 
     def post(self, post_id):
         if self.user:
-                post = get_post(post_id)
+                post = get_item('Post', post_id)
                 post.post_title = self.request.get("post_title")
                 post.post_text = self.request.get("post_text")
                 post.put()
@@ -148,7 +149,7 @@ class EditPost(Handler):
 
 class DeletePost(Handler):
     def get(self, post_id):
-        post = get_post(post_id)
+        post = get_item('Post', post_id)
         if post.created_by == self.user.name:
             ndb.Key('Post', int(post_id)).delete()
             self.render("delete.html")
@@ -159,7 +160,7 @@ class DeletePost(Handler):
 class LikePost(Handler):
     def post(self, post_id):
         if self.user:
-            post = get_post(post_id)
+            post = get_item('Post', post_id)
             likes = [x.encode("utf-8") for x in post.likes]
             username = self.user.name
             if username in likes or username == post.created_by:
@@ -173,7 +174,7 @@ class LikePost(Handler):
 
 class UnlikePost(Handler):
     def post(self, post_id):
-        post = get_post(post_id)
+        post = get_item('Post', post_id)
         likes = [x.encode("utf-8") for x in post.likes]
         likes.remove(self.user.name)
         post.likes = likes
@@ -340,6 +341,26 @@ class AddComment(Handler):
         else:
             self.redirect("/login")
 
+class EditComment(Handler):
+    def get(self, post_id, comment_id):
+        comment = get_comments(comment_id)
+        if comment.username == self.user.name:
+            self.render('edit_comment.html', comment=comment)
+        else:
+            error = "Only the user who created this comment can modify it."
+            self.render("error.html", error=error)
+
+    def post(self, post_id, comment_id):
+        if self.user:
+                post = get_item('Post', post_id)
+                post.post_title = self.request.get("post_title")
+                post.post_text = self.request.get("post_text")
+                post.put()
+
+                self.redirect("/%s" % str(post_id))
+        else:
+            self.redirect("/login")
+
 # make sure to create redirect success page
 class Welcome(Handler):
     def get(self):
@@ -356,6 +377,7 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/like', LikePost),
                                ('/([0-9]+)/unlike', UnlikePost),
                                ('/([0-9]+)/addcomment', AddComment),
+                               ('/([0-9]+)/([0-9]+)/edit', EditComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/welcome', Welcome),
