@@ -343,9 +343,10 @@ class AddComment(Handler):
 
 class EditComment(Handler):
     def get(self, post_id, comment_id):
-        comment = get_comments(comment_id)
+        comment = get_item('Comment', comment_id)
+        post = get_item('Post', post_id)
         if comment.username == self.user.name:
-            self.render('edit_comment.html', comment=comment)
+            self.render('edit_comment.html', c=comment, p=post)
         else:
             error = "Only the user who created this comment can modify it."
             self.render("error.html", error=error)
