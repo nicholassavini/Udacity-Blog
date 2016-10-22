@@ -86,7 +86,7 @@ class Blog(Handler):
 class AddPost(Handler):
     def get(self):
         if self.user:
-            self.render("newpost.html")
+            self.render("new_post.html")
         else:
             self.redirect("/login")
 
@@ -104,7 +104,7 @@ class AddPost(Handler):
                     self.redirect("/%s" % str(p.key.id()))
                 else:
                     error = "We need both a post title and a post body!"
-                    self.render("newpost.html", post_title=post_title, post_text=post_text, error=error)
+                    self.render("new_post.html", post_title=post_title, post_text=post_text, error=error)
         else:
             self.redirect("/login")
 
@@ -130,7 +130,7 @@ class EditPost(Handler):
     def get(self, post_id):
         post = get_post(post_id)
         if post.created_by == self.user.name:
-            self.render('editpost.html', post=post)
+            self.render('edit_post.html', post=post)
         else:
             error = "Only the user who created this post can modify it."
             self.render("error.html", error=error)
@@ -349,7 +349,7 @@ class Welcome(Handler):
             self.redirect('/signup')
 
 app = webapp2.WSGIApplication([('/', Blog),
-                               ('/newpost', AddPost),
+                               ('/new_post', AddPost),
                                ('/([0-9]+)', Permalink),
                                ('/([0-9]+)/edit', EditPost),
                                ('/([0-9]+)/delete', DeletePost),
