@@ -12,8 +12,8 @@ from google.appengine.ext import ndb
 from google.appengine.ext import db
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                                autoescape = True)
+jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
+                                autoescape=True)
 
 secret = "as;digjh34968qt[asireg"
 
@@ -62,16 +62,16 @@ class Handler(webapp2.RequestHandler):
         self.user = uid and User.by_id(int(uid))
 
 class Post(ndb.Model, Handler):
-    post_title = ndb.StringProperty(required = True)
-    post_text = ndb.TextProperty(required = True)
-    post_created = ndb.DateTimeProperty(auto_now_add = True)
-    last_modified = ndb.DateTimeProperty(auto_now = True)
-    created_by = ndb.StringProperty(required = True)
-    likes = ndb.StringProperty(repeated = True)
+    post_title = ndb.StringProperty(required=True)
+    post_text = ndb.TextProperty(required=True)
+    post_created = ndb.DateTimeProperty(auto_now_add=True)
+    last_modified = ndb.DateTimeProperty(auto_now=True)
+    created_by = ndb.StringProperty(required=True)
+    likes = ndb.StringProperty(repeated=True)
 
     def render_post(self):
         self._render_text = self.post_text.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return render_str("post.html", p=self)
 
 
 #### Blog Presentation
@@ -95,10 +95,10 @@ class AddPost(Handler):
                 post_title = self.request.get("post_title")
                 post_text = self.request.get("post_text")
                 created_by = self.user.name
-
+                # see about params
                 if post_title and post_text:
-                    p = Post(post_title = post_title, post_text = post_text,
-                             created_by = created_by)
+                    p = Post(post_title=post_title, post_text=post_text,
+                             created_by=created_by)
                     p.put()
 
                     self.redirect("/%s" % str(p.key.id()))
@@ -133,7 +133,7 @@ class EditPost(Handler):
             self.render('editpost.html', post=post)
         else:
             error = "Only the user who created this post can modify it."
-            self.render("error.html", error = error)
+            self.render("error.html", error=error)
 
     def post(self, post_id):
         if self.user:
@@ -154,7 +154,7 @@ class DeletePost(Handler):
             self.render("delete.html")
         else:
             error = "Only the user who created this post can modify it."
-            self.render("error.html", error = error)
+            self.render("error.html", error=error)
 
 class LikePost(Handler):
     def post(self, post_id):
@@ -199,13 +199,13 @@ def users_key(group = 'default'):
     return db.Key.from_path('users', group)
 
 class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
+    name = db.StringProperty(required=True)
+    pw_hash = db.StringProperty(required=True)
     email = db.StringProperty()
 
     @classmethod
     def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
+        return User.get_by_id(uid, parent=users_key())
 
     @classmethod
     def by_name(cls, name):
@@ -213,12 +213,12 @@ class User(db.Model):
         return u
 
     @classmethod
-    def register(cls, name, pw, email = None):
+    def register(cls, name, pw, email=None):
         pw_hash = make_pw_hash(name, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
+        return User(parent=users_key(),
+                    name=name,
+                    pw_hash=pw_hash,
+                    email=email)
 
     @classmethod
     def login(cls, name, pw):
@@ -252,8 +252,8 @@ class Signup(Handler):
 
         # consider moving the has-error part to a js script
         has_error = False
-        params = dict(username = self.username, email = self.email,
-            password = self.password, verify = self.verify)
+        params = dict(username=self.username, email=self.email,
+            password=self.password, verify=self.verify)
 
         if not valid_username(self.username):
             params['username_error'] = "Not a valid username"
@@ -305,7 +305,7 @@ class Login(Handler):
             self.redirect('/')
         else:
             msg = 'Invalid login'
-            self.render('login.html', error = msg)
+            self.render('login.html', error=msg)
 
 class Logout(Handler):
     def get(self):
@@ -315,11 +315,11 @@ class Logout(Handler):
 #### Comment Stuff
 
 class Comment(ndb.Model):
-    username = ndb.StringProperty(required = True)
-    comment_title = ndb.StringProperty(required = True)
-    comment_text = ndb.TextProperty(required = True)
-    post_id = ndb.StringProperty(required = True)
-    comment_date = ndb.DateTimeProperty(auto_now_add = True)
+    username = ndb.StringProperty(required=True)
+    comment_title = ndb.StringProperty(required=True)
+    comment_text = ndb.TextProperty(required=True)
+    post_id = ndb.StringProperty(required=True)
+    comment_date = ndb.DateTimeProperty(auto_now_add=True)
 
 class AddComment(Handler):
     def post(self, post_id):
@@ -330,8 +330,8 @@ class AddComment(Handler):
             post_id = post_id
 
             if comment_title and comment_text:
-                c = Comment(username = username, comment_title = comment_title,
-                            comment_text = comment_text, post_id = post_id)
+                c = Comment(username=username, comment_title=comment_title,
+                            comment_text=comment_text, post_id=post_id)
                 c.put()
                 self.redirect("/%s" % str(post_id))
             else:
@@ -344,7 +344,7 @@ class AddComment(Handler):
 class Welcome(Handler):
     def get(self):
         if self.user:
-            self.render('welcome.html', username = self.user.name)
+            self.render('welcome.html', username=self.user.name)
         else:
             self.redirect('/signup')
 
