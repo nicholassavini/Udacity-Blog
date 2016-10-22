@@ -5,7 +5,7 @@
   {% if user.name == c.username %}
   <div class="col-md-3">
     <a class="btn btn-default" href="/{{p.key.id()}}/{{c.key.id()}}/edit">Edit</a>
-    <a class="btn btn-danger" href="/{{p.key.id()}}/delete">Delete</a>
+    <a class="btn btn-danger" href="/{{p.key.id()}}/{{c.key.id()}}/delete">Delete</a>
   </div>
   {% else %}
   <div class="col-md-3 text-left">

@@ -152,7 +152,7 @@ class DeletePost(Handler):
         post = get_item('Post', post_id)
         if post.created_by == self.user.name:
             ndb.Key('Post', int(post_id)).delete()
-            self.render("delete.html")
+            self.redirect("/")
         else:
             error = "Only the user who created this post can modify it."
             self.render("error.html", error=error)
@@ -362,6 +362,16 @@ class EditComment(Handler):
         else:
             self.redirect("/login")
 
+class DeleteComment(Handler):
+    def get(self, post_id, comment_id):
+        comment = get_item('Comment', comment_id)
+        if comment.username == self.user.name:
+            ndb.Key('Comment', int(comment_id)).delete()
+            self.redirect("/%s" % str(post_id))
+        else:
+            error = "Only the user who created this comment can modify it."
+            self.render("error.html", error=error)
+
 # make sure to create redirect success page
 class Welcome(Handler):
     def get(self):
@@ -379,6 +389,7 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/unlike', UnlikePost),
                                ('/([0-9]+)/addcomment', AddComment),
                                ('/([0-9]+)/([0-9]+)/edit', EditComment),
+                               ('/([0-9]+)/([0-9]+)/delete', DeleteComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/welcome', Welcome),
