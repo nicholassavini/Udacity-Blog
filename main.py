@@ -353,10 +353,10 @@ class EditComment(Handler):
 
     def post(self, post_id, comment_id):
         if self.user:
-                post = get_item('Post', post_id)
-                post.post_title = self.request.get("post_title")
-                post.post_text = self.request.get("post_text")
-                post.put()
+                c = get_item('Comment', comment_id)
+                c.comment_title = self.request.get("comment_title")
+                c.comment_text = self.request.get("comment_text")
+                c.put()
 
                 self.redirect("/%s" % str(post_id))
         else:
