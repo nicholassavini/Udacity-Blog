@@ -1,5 +1,5 @@
 <a class="comments" name="comments"><h3>Comments</h3></a>
-<form class="form-horizontal" method="post" action="/{{p.key.id()}}/addcomment">
+<form class="form-horizontal" method="post" action="/{{p.key.id()}}/add_comment">
   <div class="form-group">
     <label for="comment_title" class="col-md-1 control-label">Title</label>
     <div class="col-md-10">
@@ -26,8 +26,11 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-10">
             <h4>{{c.comment_title}}</h4>
+        </div>
+        <div class="col-md-2 text-right comment-likes">
+              Likes: {{ c.likes | length}}
         </div>
     </div>
     <div class="row">

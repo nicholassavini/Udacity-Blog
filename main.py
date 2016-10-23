@@ -321,6 +321,8 @@ class Comment(ndb.Model):
     comment_text = ndb.TextProperty(required=True)
     post_id = ndb.StringProperty(required=True)
     comment_date = ndb.DateTimeProperty(auto_now_add=True)
+    likes = ndb.StringProperty(repeated=True)
+
 
 class AddComment(Handler):
     def post(self, post_id):
@@ -372,6 +374,37 @@ class DeleteComment(Handler):
             error = "Only the user who created this comment can modify it."
             self.render("error.html", error=error)
 
+class LikeComment(Handler):
+    def post(self, post_id, comment_id):
+        if self.user:
+            comment = get_item('Comment', comment_id)
+            likes = [x.encode("utf-8") for x in comment.likes]
+            username = self.user.name
+            if username in likes or username == comment.username:
+                self.redirect("/%s" % str(post_id))
+            else:
+                comment.likes.append(username)
+                comment.put()
+                self.redirect("/%s" % str(post_id))
+        else:
+            self.redirect("/login")
+
+class UnlikeComment(Handler):
+    def post(self, post_id, comment_id):
+        if self.user:
+            comment = get_item('Comment', comment_id)
+            likes = [x.encode("utf-8") for x in comment.likes]
+            username = self.user.name
+            if username in likes or username == comment.username:
+                likes.remove(username)
+                comment.likes = likes
+                comment.put()
+                self.redirect("/%s" % str(post_id))
+            else:
+                self.redirect("/%s" % str(post_id))
+        else:
+            self.redirect("/login")
+
 # make sure to create redirect success page
 class Welcome(Handler):
     def get(self):
@@ -387,9 +420,11 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/delete', DeletePost),
                                ('/([0-9]+)/like', LikePost),
                                ('/([0-9]+)/unlike', UnlikePost),
-                               ('/([0-9]+)/addcomment', AddComment),
+                               ('/([0-9]+)/add_comment', AddComment),
                                ('/([0-9]+)/([0-9]+)/edit', EditComment),
                                ('/([0-9]+)/([0-9]+)/delete', DeleteComment),
+                               ('/([0-9]+)/([0-9]+)/like', LikeComment),
+                               ('/([0-9]+)/([0-9]+)/unlike', UnlikeComment),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/welcome', Welcome),
