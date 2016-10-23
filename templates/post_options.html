@@ -3,9 +3,8 @@
       <a class="btn btn-default" href="/{{p.key.id()}}#comments">Comments</a>
   </div>
   {% if user.name == p.created_by %}
-  <div class="col-md-3">
+  <div class="col-md-2">
     <a class="btn btn-default" href="/{{p.key.id()}}/edit">Edit</a>
-    <a class="btn btn-danger" href="/{{p.key.id()}}/delete">Delete</a>
   </div>
   {% else %}
   <div class="col-md-3 text-left">
