@@ -349,23 +349,36 @@ class Comment(ndb.Model):
     comment_date = ndb.DateTimeProperty(auto_now_add=True)
     likes = ndb.StringProperty(repeated=True)
 
-
+# These are probably supposed to support HTML
 class AddComment(Handler):
     def post(self, post_id):
         if self.user:
             username = self.user.name
             comment_title = self.request.get("comment_title")
             comment_text = self.request.get("comment_text")
-            post_id = post_id
 
-            if comment_title and comment_text:
+            params = dict(comment_title=comment_title,
+                          comment_text=comment_text)
+            has_error = False
+            if not comment_title:
+                params['title_class'] = "has-error"
+                params['title_error'] = "We need a comment title!"
+                has_error = True
+            if not comment_text:
+                params['text_class'] = "has-error"
+                params['text_error'] = "We need a comment body!"
+                has_error = True
+
+            if has_error:
+                params['post_id'] = post_id
+                self.render("new_comment.html", **params)
+
+            else:
                 c = Comment(username=username, comment_title=comment_title,
                             comment_text=comment_text, post_id=post_id)
                 c.put()
+
                 self.redirect("/%s" % str(post_id))
-            else:
-                error = "Can't post blank comment!"
-                #self.render(".html", post_title=post_title, post_text=post_text, error=error)
         else:
             self.redirect("/login")
 
