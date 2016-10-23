@@ -41,9 +41,8 @@ class Handler(webapp2.RequestHandler):
 
     def set_secure_cookie(self, name, val):
         cookie_val = make_secure_val(val)
-        self.response.headers.add_header(
-            'Set-Cookie',
-            '%s=%s; Path=/' % (name, cookie_val))
+        self.response.headers.add_header('Set-Cookie',
+                                         '%s=%s; Path=/' % (name, cookie_val))
 
     def read_secure_cookie(self, name):
         cookie_val = self.request.cookies.get(name)
@@ -60,7 +59,7 @@ class Handler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
-class Post(ndb.Model, Handler):
+class Post(ndb.Model):
     post_title = ndb.StringProperty(required=True)
     post_text = ndb.TextProperty(required=True)
     post_created = ndb.DateTimeProperty(auto_now_add=True)
@@ -93,22 +92,26 @@ class AddPost(Handler):
                 post_title = self.request.get("post_title")
                 post_text = self.request.get("post_text")
                 created_by = self.user.name
-                # see about params
-                if post_title and post_text:
+
+                params = dict(post_title=post_title, post_text=post_text)
+                has_error = False
+                if not post_title:
+                    params['title_class'] = "has-error"
+                    params['title_error'] = "We need a post title!"
+                    has_error = True
+                if not post_text:
+                    params['text_class'] = "has-error"
+                    params['text_error'] = "We need a post body!"
+                    has_error = True
+
+                if has_error:
+                    self.render("new_post.html", **params)
+                else:
                     p = Post(post_title=post_title, post_text=post_text,
                              created_by=created_by)
                     p.put()
 
                     self.redirect("/%s" % str(p.key.id()))
-                else:
-                    params = dict(post_title=post_title, post_text=post_text)
-                    if not post_title:
-                        params['title_class'] = "has-error"
-                        params['title_error'] = "We need a post title!"
-                    if not post_text:
-                        params['text_class'] = "has-error"
-                        params['text_error'] = "We need a post body!"
-                    self.render("new_post.html", **params)
         else:
             self.redirect("/login")
 
@@ -149,22 +152,27 @@ class EditPost(Handler):
             if self.request.get("action") == "edit":
                 post_title = self.request.get("post_title")
                 post_text = self.request.get("post_text")
-                if post_title and post_text:
+
+                params = dict(p=post)
+                has_error = False
+
+                if not post_title:
+                    params['title_class'] = "has-error"
+                    params['title_error'] = "We need a post title!"
+                    has_error = True
+                if not post_text:
+                    params['text_class'] = "has-error"
+                    params['text_error'] = "We need a post body!"
+                    has_error = True
+
+                if has_error:
+                    self.render("edit_post.html", **params)
+                else:
                     post.post_title = post_title
                     post.post_text = post_text
                     post.put()
 
                     self.redirect("/%s" % str(post_id))
-                else:
-                    params = dict(p=post)
-                    if not post_title:
-                        params['title_class'] = "has-error"
-                        params['title_error'] = "We need a post title!"
-                    if not post_text:
-                        params['text_class'] = "has-error"
-                        params['text_error'] = "We need a post body!"
-
-                    self.render("edit_post.html", **params)
             else:
                 ndb.Key('Post', int(post_id)).delete()
                 comments = Comment.query(Comment.post_id==post_id)
