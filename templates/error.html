@@ -1,5 +1,7 @@
-{% extends "base_redirect.html" %}
-
+{% block title %}Error{% endblock %}
+{% block head %}
+<meta http-equiv="refresh" content="3;url=/">
+{% endblock %}
 {% block content %}
 <div class="row">
     <h1 class="col-md-12 text-center text-danger">Unauthorized Access</h1>
