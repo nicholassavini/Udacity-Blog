@@ -278,7 +278,6 @@ class Signup(Handler):
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
 
-        # consider moving the has-error part to a js script
         has_error = False
         params = dict(username=self.username, email=self.email,
             password=self.password, verify=self.verify)
@@ -332,8 +331,8 @@ class Login(Handler):
             self.login(u)
             self.redirect('/')
         else:
-            msg = 'Invalid login'
-            self.render('login.html', error=msg)
+            error = 'Invalid login'
+            self.render('login.html', error=error)
 
 class Logout(Handler):
     def get(self):
