@@ -77,7 +77,6 @@ class Post(ndb.Model, Handler):
 #### Blog Presentation
 
 class Blog(Handler):
-
     def get(self):
         posts = Post.query().order(-Post.post_created)
         self.render("front.html", posts=posts, username=self.user)
@@ -103,8 +102,14 @@ class AddPost(Handler):
 
                     self.redirect("/%s" % str(p.key.id()))
                 else:
-                    error = "We need both a post title and a post body!"
-                    self.render("new_post.html", post_title=post_title, post_text=post_text, error=error)
+                    params = dict(post_title=post_title, post_text=post_text)
+                    if not post_title:
+                        params['title_class'] = "has-error"
+                        params['title_error'] = "We need a post title!"
+                    if not post_text:
+                        params['text_class'] = "has-error"
+                        params['text_error'] = "We need a post body!"
+                    self.render("new_post.html", **params)
         else:
             self.redirect("/login")
 
