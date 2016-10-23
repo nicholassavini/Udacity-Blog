@@ -136,21 +136,37 @@ class EditPost(Handler):
     def get(self, post_id):
         post = get_item('Post', post_id)
         if post.created_by == self.user.name:
-            self.render('edit_post.html', post=post)
+            self.render('edit_post.html', p=post)
         else:
             error = "Only the user who created this post can modify it."
+
             self.render("error.html", error=error)
 
     def post(self, post_id):
-        if self.user:
-                post = get_item('Post', post_id)
-                post.post_title = self.request.get("post_title")
-                post.post_text = self.request.get("post_text")
+        post = get_item('Post', post_id)
+        if post.created_by == self.user.name:
+            post_title = self.request.get("post_title")
+            post_text = self.request.get("post_text")
+            if post_title and post_text:
+                post.post_title = post_title
+                post.post_text = post_text
                 post.put()
 
                 self.redirect("/%s" % str(post_id))
+            else:
+                params = dict(p=post)
+                if not post_title:
+                    params['title_class'] = "has-error"
+                    params['title_error'] = "We need a post title!"
+                if not post_text:
+                    params['text_class'] = "has-error"
+                    params['text_error'] = "We need a post body!"
+
+                self.render("edit_post.html", **params)
         else:
-            self.redirect("/login")
+            error = "Only the user who created this post can modify it."
+
+            self.render("error.html", error=error)
 
 class DeletePost(Handler):
     def get(self, post_id):
