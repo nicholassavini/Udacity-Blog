@@ -117,8 +117,10 @@ def get_item(item_type, item_id):
         post = ndb.Key(item_type, int(item_id)).get()
         return post
 
+# consider splitting this into two functions for reusability
 def get_comments(post_id):
-        comments = Comment.query(Comment.post_id == post_id).order(Comment.comment_date)
+        comments = Comment.query(Comment.post_id == post_id)
+        comments = comments.order(Comment.comment_date)
         return comments
 
 
@@ -145,63 +147,66 @@ class EditPost(Handler):
     def post(self, post_id):
         post = get_item('Post', post_id)
         if post.created_by == self.user.name:
-            post_title = self.request.get("post_title")
-            post_text = self.request.get("post_text")
-            if post_title and post_text:
-                post.post_title = post_title
-                post.post_text = post_text
-                post.put()
+            if self.request.get("action") == "edit":
+                post_title = self.request.get("post_title")
+                post_text = self.request.get("post_text")
+                if post_title and post_text:
+                    post.post_title = post_title
+                    post.post_text = post_text
+                    post.put()
 
-                self.redirect("/%s" % str(post_id))
+                    self.redirect("/%s" % str(post_id))
+                else:
+                    params = dict(p=post)
+                    if not post_title:
+                        params['title_class'] = "has-error"
+                        params['title_error'] = "We need a post title!"
+                    if not post_text:
+                        params['text_class'] = "has-error"
+                        params['text_error'] = "We need a post body!"
+
+                    self.render("edit_post.html", **params)
             else:
-                params = dict(p=post)
-                if not post_title:
-                    params['title_class'] = "has-error"
-                    params['title_error'] = "We need a post title!"
-                if not post_text:
-                    params['text_class'] = "has-error"
-                    params['text_error'] = "We need a post body!"
+                ndb.Key('Post', int(post_id)).delete()
+                comments = Comment.query(Comment.post_id==post_id)
+                keys = comments.fetch(keys_only=True)
+                ndb.delete_multi(keys)
 
-                self.render("edit_post.html", **params)
+                self.redirect("/")
         else:
             error = "Only the user who created this post can modify it."
 
-            self.render("error.html", error=error)
-
-class DeletePost(Handler):
-    def get(self, post_id):
-        post = get_item('Post', post_id)
-        if post.created_by == self.user.name:
-            ndb.Key('Post', int(post_id)).delete()
-            self.redirect("/")
-        else:
-            error = "Only the user who created this post can modify it."
             self.render("error.html", error=error)
 
 class LikePost(Handler):
     def post(self, post_id):
         if self.user:
             post = get_item('Post', post_id)
-            likes = [x.encode("utf-8") for x in post.likes]
+            likes = [l.encode("utf-8") for l in post.likes]
             username = self.user.name
             if username in likes or username == post.created_by:
-                self.redirect("/")
+                self.redirect("/%s" % str(post.key.id()))
             else:
                 post.likes.append(username)
                 post.put()
+
                 self.redirect("/")
         else:
             self.redirect("/login")
 
 class UnlikePost(Handler):
     def post(self, post_id):
-        post = get_item('Post', post_id)
-        likes = [x.encode("utf-8") for x in post.likes]
-        likes.remove(self.user.name)
-        post.likes = likes
-        post.put()
-        self.redirect("/")
+        if self.user:
+            post = get_item('Post', post_id)
+            likes = [l.encode("utf-8") for l in post.likes]
+            likes.remove(self.user.name)
 
+            post.likes = likes
+            post.put()
+
+            self.redirect("/%s" % str(post.key.id()))
+        else:
+            self.redirect("/login")
 #### User Code
 
 def make_salt(length = 5):
@@ -438,7 +443,6 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/new_post', AddPost),
                                ('/([0-9]+)', Permalink),
                                ('/([0-9]+)/edit', EditPost),
-                               ('/([0-9]+)/delete', DeletePost),
                                ('/([0-9]+)/like', LikePost),
                                ('/([0-9]+)/unlike', UnlikePost),
                                ('/([0-9]+)/add_comment', AddComment),
