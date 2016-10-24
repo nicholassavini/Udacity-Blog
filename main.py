@@ -234,7 +234,7 @@ class Blog(Handler):
 
 
 
-def validate_user(Handler):
+def user_required(Handler):
     def authorize(self, *args, **kwargs):
         if self.user:
             return Handler(self, *args, **kwargs)
@@ -245,45 +245,38 @@ def validate_user(Handler):
 
 class AddPost(Handler):
     """ Allows for the addition of a new post """
-    @validate_user
+    @user_required
     def get(self):
         """ Renders the new post page if the user is logged in """
-        #if self.user:
         self.render("new_post.html")
-        #else:
-        #    self.redirect("/login")
 
+    @user_required
     def post(self):
         """
         Creates a new post if the user is logged in, and the provided values
         are all valid
         """
-        if self.user:
-            post_title = self.request.get("post_title")
-            post_text = self.request.get("post_text")
-            created_by = self.user.name
 
-            params = dict(post_title=post_title, post_text=post_text)
-            has_error = False
-            if not post_title:
-                params['title_class'] = "has-error"
-                params['title_error'] = "We need a post title!"
-                has_error = True
-            if not post_text:
-                params['text_class'] = "has-error"
-                params['text_error'] = "We need a post body!"
-                has_error = True
-
-            if has_error:
-                self.render("new_post.html", **params)
-            else:
-                p = Post(post_title=post_title, post_text=post_text,
-                         created_by=created_by)
-                p.put()
-
-                self.redirect("/%s" % str(p.key.id()))
+        post_title = self.request.get("post_title")
+        post_text = self.request.get("post_text")
+        created_by = self.user.name
+        params = dict(post_title=post_title, post_text=post_text)
+        has_error = False
+        if not post_title:
+            params['title_class'] = "has-error"
+            params['title_error'] = "We need a post title!"
+            has_error = True
+        if not post_text:
+            params['text_class'] = "has-error"
+            params['text_error'] = "We need a post body!"
+            has_error = True
+        if has_error:
+            self.render("new_post.html", **params)
         else:
-            self.redirect("/login")
+            p = Post(post_title=post_title, post_text=post_text,
+                        created_by=created_by)
+            p.put()
+            self.redirect("/%s" % str(p.key.id()))
 
 
 class Permalink(Handler):
@@ -304,22 +297,20 @@ class Permalink(Handler):
 
 class EditPost(Handler):
     """ Allows for a post to be edited """
+    @user_required
     def get(self, post_id):
         """
         Renders the edit post template with the values of the post filled in
         if the logged in user is the user who created the post
         """
-        if self.user:
-            post = get_item('Post', post_id)
-            if post.created_by == self.user.name:
-                self.render('edit_post.html', p=post)
-            else:
-                error = "Only the user who created this post can modify it."
-
-                self.render("error.html", error=error)
+        post = get_item('Post', post_id)
+        if post.created_by == self.user.name:
+            self.render('edit_post.html', p=post)
         else:
-            self.redirect("/login")
+            error = "Only the user who created this post can modify it."
+            self.render("error.html", error=error)
 
+    @user_required
     def post(self, post_id):
         """
         Submits the changes to the post, or deletes the post if the logged in
@@ -367,55 +358,46 @@ class EditPost(Handler):
 
 class LikePost(Handler):
     """ Allows a post to be liked """
+    @user_required
     def post(self, post_id):
         """
         If the user didn't created the post or already liked the post, adds a
         new like the post
         """
-        if self.user:
-            post = get_item('Post', post_id)
-            likes = [l.encode("utf-8") for l in post.likes]
-            username = self.user.name
-            if username in likes or username == post.created_by:
-                self.redirect("/%s" % str(post.key.id()))
-            else:
-                post.likes.append(username)
-                post.put()
-
-                self.redirect("/")
+        post = get_item('Post', post_id)
+        likes = [l.encode("utf-8") for l in post.likes]
+        username = self.user.name
+        if username in likes or username == post.created_by:
+            self.redirect("/%s" % str(post.key.id()))
         else:
-            self.redirect("/login")
+            post.likes.append(username)
+            post.put()
+            self.redirect("/")
 
 
 class UnlikePost(Handler):
     """ Allows a post to be unliked """
+    @user_required
     def post(self, post_id):
         """ If the user liked the post, removes their like """
-        if self.user:
-            post = get_item('Post', post_id)
-            likes = [l.encode("utf-8") for l in post.likes]
-            likes.remove(self.user.name)
+        post = get_item('Post', post_id)
+        likes = [l.encode("utf-8") for l in post.likes]
+        likes.remove(self.user.name)
+        post.likes = likes
+        post.put()
+        self.redirect("/%s" % str(post.key.id()))
 
-            post.likes = likes
-            post.put()
-
-            self.redirect("/%s" % str(post.key.id()))
-        else:
-            self.redirect("/login")
-
-
+#### technically this should redirect to signup, not login
 class Welcome(Handler):
     """ Provides the newly logged in user with a welcome message """
+    @user_required
     def get(self):
         """ If the user is logged in, renders a welcome page """
-        if self.user:
-            self.render('welcome.html', username=self.user.name)
-        else:
-            self.redirect('/signup')
+        self.render('welcome.html', username=self.user.name)
 
 # User Handlers
 
-
+# should probably check if user is already logged in
 class Signup(Handler):
     """ Allows someone to register as a new user """
     def get(self):
@@ -515,63 +497,56 @@ class Logout(Handler):
 
 class AddComment(Handler):
     """ Allows for the creation of new comments """
+    @user_required
     def post(self, post_id):
         """
         If the user is logged in, and the provided values are all valid, a new
         comment entity is created for the given post. If there is an error, a
         new comment template is rendered with the values provided
         """
-        if self.user:
-            username = self.user.name
-            comment_title = self.request.get("comment_title")
-            comment_text = self.request.get("comment_text")
-
-            params = dict(comment_title=comment_title,
-                          comment_text=comment_text)
-            has_error = False
-            if not comment_title:
-                # This sets the "has-error" class for Bootstrap
-                params['title_class'] = "has-error"
-                params['title_error'] = "We need a comment title!"
-                has_error = True
-            if not comment_text:
-                params['text_class'] = "has-error"
-                params['text_error'] = "We need a comment body!"
-                has_error = True
-
-            if has_error:
-                params['post_id'] = post_id
-                self.render("new_comment.html", **params)
-
-            else:
-                c = Comment(username=username, comment_title=comment_title,
-                            comment_text=comment_text, post_id=post_id)
-                c.put()
-
-                self.redirect("/%s" % str(post_id))
+        username = self.user.name
+        comment_title = self.request.get("comment_title")
+        comment_text = self.request.get("comment_text")
+        params = dict(comment_title=comment_title,
+                        comment_text=comment_text)
+        has_error = False
+        if not comment_title:
+            # This sets the "has-error" class for Bootstrap
+            params['title_class'] = "has-error"
+            params['title_error'] = "We need a comment title!"
+            has_error = True
+        if not comment_text:
+            params['text_class'] = "has-error"
+            params['text_error'] = "We need a comment body!"
+            has_error = True
+        if has_error:
+            params['post_id'] = post_id
+            self.render("new_comment.html", **params)
         else:
-            self.redirect("/login")
+            c = Comment(username=username, comment_title=comment_title,
+                        comment_text=comment_text, post_id=post_id)
+            c.put()
+            self.redirect("/%s" % str(post_id))
+
 
 
 class EditComment(Handler):
     """" Allows for an already posted comment to be edited """
+    @user_required
     def get(self, post_id, comment_id):
         """
         Renders the edit comment template with the values of the comment filled
         in if the logged in user is the user who created the comment
         """
-        if self.user:
-
-            comment = get_item('Comment', comment_id)
-            post = get_item('Post', post_id)
-            if comment.username == self.user.name:
-                self.render('edit_comment.html', c=comment, p=post)
-            else:
-                error = "Only the user who created this comment can modify it."
-                self.render("error.html", error=error)
+        comment = get_item('Comment', comment_id)
+        post = get_item('Post', post_id)
+        if comment.username == self.user.name:
+            self.render('edit_comment.html', c=comment, p=post)
         else:
-            self.redirect("/login")
+            error = "Only the user who created this comment can modify it."
+            self.render("error.html", error=error)
 
+    @user_required
     def post(self, post_id, comment_id):
         """
         Submits the changes to the comment, or deletes the comment if the
@@ -616,42 +591,38 @@ class EditComment(Handler):
 
 class LikeComment(Handler):
     """ Allows for a comment to be liked """
+    @user_required
     def post(self, post_id, comment_id):
         """
         If the user didn't created the comment or already liked the comment,
         adds a new like to the comment
         """
-        if self.user:
-            comment = get_item('Comment', comment_id)
-            likes = [u.encode("utf-8") for u in comment.likes]
-            username = self.user.name
-            if username in likes or username == comment.username:
-                self.redirect("/%s" % str(post_id))
-            else:
-                comment.likes.append(username)
-                comment.put()
-                self.redirect("/%s" % str(post_id))
+        comment = get_item('Comment', comment_id)
+        likes = [u.encode("utf-8") for u in comment.likes]
+        username = self.user.name
+        if username in likes or username == comment.username:
+            self.redirect("/%s" % str(post_id))
         else:
-            self.redirect("/login")
+            comment.likes.append(username)
+            comment.put()
+            self.redirect("/%s" % str(post_id))
 
 
 class UnlikeComment(Handler):
     """ Allows users to unlike a comment """
+    @user_required
     def post(self, post_id, comment_id):
         """ If the user liked the comment, removes their like """
-        if self.user:
-            comment = get_item('Comment', comment_id)
-            likes = [u.encode("utf-8") for u in comment.likes]
-            username = self.user.name
-            if username in likes or username == comment.username:
-                likes.remove(username)
-                comment.likes = likes
-                comment.put()
-                self.redirect("/%s" % str(post_id))
-            else:
-                self.redirect("/%s" % str(post_id))
+        comment = get_item('Comment', comment_id)
+        likes = [u.encode("utf-8") for u in comment.likes]
+        username = self.user.name
+        if username in likes or username == comment.username:
+            likes.remove(username)
+            comment.likes = likes
+            comment.put()
+            self.redirect("/%s" % str(post_id))
         else:
-            self.redirect("/login")
+            self.redirect("/%s" % str(post_id))
 
 
 app = webapp2.WSGIApplication([('/', Blog),
