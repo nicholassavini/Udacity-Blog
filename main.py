@@ -12,21 +12,25 @@ from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader=jinja2.FileSystemLoader(template_dir),
-                                autoescape=True)
+                               autoescape=True)
 
 secret = "as;digjh34968qt[asireg"
+
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
 
+
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+
 
 def check_secure_val(secure_val):
     val = secure_val.split('|')[0]
     if secure_val == make_secure_val(val):
         return val
+
 
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -59,6 +63,7 @@ class Handler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
+
 class Post(ndb.Model):
     post_title = ndb.StringProperty(required=True)
     post_text = ndb.TextProperty(required=True)
@@ -72,7 +77,7 @@ class Post(ndb.Model):
         return render_str("post.html", p=self)
 
 
-#### Blog Presentation
+# Blog Presentation
 
 class Blog(Handler):
     def get(self):
@@ -115,9 +120,11 @@ class AddPost(Handler):
         else:
             self.redirect("/login")
 
+
 def get_item(item_type, item_id):
         post = ndb.Key(item_type, int(item_id)).get()
         return post
+
 
 # consider splitting this into two functions for reusability
 def get_comments(post_id):
@@ -136,6 +143,7 @@ class Permalink(Handler):
 
         self.render("permalink.html", p=post, comments=comments)
 
+
 class EditPost(Handler):
     def get(self, post_id):
         if self.user:
@@ -148,7 +156,6 @@ class EditPost(Handler):
                 self.render("error.html", error=error)
         else:
             self.redirect("/login")
-
 
     def post(self, post_id):
         post = get_item('Post', post_id)
@@ -179,7 +186,7 @@ class EditPost(Handler):
                     self.redirect("/%s" % str(post_id))
             elif self.request.get("action") == "delete":
                 ndb.Key('Post', int(post_id)).delete()
-                comments = Comment.query(Comment.post_id==post_id)
+                comments = Comment.query(Comment.post_id == post_id)
                 keys = comments.fetch(keys_only=True)
                 ndb.delete_multi(keys)
 
@@ -188,6 +195,7 @@ class EditPost(Handler):
             error = "Only the user who created this post can modify it."
 
             self.render("error.html", error=error)
+
 
 class LikePost(Handler):
     def post(self, post_id):
@@ -205,6 +213,7 @@ class LikePost(Handler):
         else:
             self.redirect("/login")
 
+
 class UnlikePost(Handler):
     def post(self, post_id):
         if self.user:
@@ -218,20 +227,25 @@ class UnlikePost(Handler):
             self.redirect("/%s" % str(post.key.id()))
         else:
             self.redirect("/login")
+
 #### User Code
 
-def make_salt(length = 5):
+
+def make_salt(length=5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
-def make_pw_hash(name, pw, salt = None):
+
+def make_pw_hash(name, pw, salt=None):
     if not salt:
         salt = make_salt()
     h = hashlib.sha256(name + pw + salt).hexdigest()
     return '%s,%s' % (salt, h)
 
+
 def valid_pw(name, password, h):
     salt = h.split(',')[0]
     return h == make_pw_hash(name, password, salt)
+
 
 class User(ndb.Model):
     name = ndb.StringProperty(required=True)
@@ -244,7 +258,7 @@ class User(ndb.Model):
 
     @classmethod
     def by_name(cls, name):
-        u = User.query(User.name==name).get()
+        u = User.query(User.name == name).get()
         return u
 
     @classmethod
@@ -262,14 +276,18 @@ USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 PASS_RE = re.compile(r"^.{3,20}$")
 EMAIL_RE = re.compile(r"^[\S]+@[\S]+.[\S]+$")
 
+
 def valid_username(username):
     return USER_RE.match(username)
+
 
 def valid_password(password):
     return PASS_RE.match(password)
 
+
 def valid_email(email):
     return EMAIL_RE.match(email)
+
 
 class Signup(Handler):
 
@@ -284,7 +302,7 @@ class Signup(Handler):
 
         has_error = False
         params = dict(username=self.username, email=self.email,
-            password=self.password, verify=self.verify)
+                      password=self.password, verify=self.verify)
 
         if not valid_username(self.username):
             params['username_error'] = "Not a valid username"
@@ -322,6 +340,7 @@ class Register(Signup):
             self.login(u)
             self.redirect('/')
 
+
 class Login(Handler):
     def get(self):
         self.render('login.html')
@@ -338,12 +357,14 @@ class Login(Handler):
             error = 'Invalid login'
             self.render('login.html', error=error)
 
+
 class Logout(Handler):
     def get(self):
         self.logout()
         self.redirect('/')
 
 #### Comment Stuff
+
 
 class Comment(ndb.Model):
     username = ndb.StringProperty(required=True)
@@ -352,6 +373,7 @@ class Comment(ndb.Model):
     post_id = ndb.StringProperty(required=True)
     comment_date = ndb.DateTimeProperty(auto_now_add=True)
     likes = ndb.StringProperty(repeated=True)
+
 
 # These are probably supposed to support HTML
 class AddComment(Handler):
@@ -386,6 +408,7 @@ class AddComment(Handler):
         else:
             self.redirect("/login")
 
+
 class EditComment(Handler):
     def get(self, post_id, comment_id):
         if self.user:
@@ -399,7 +422,6 @@ class EditComment(Handler):
                 self.render("error.html", error=error)
         else:
             self.redirect("/login")
-
 
     def post(self, post_id, comment_id):
         comment = get_item('Comment', comment_id)
@@ -437,6 +459,7 @@ class EditComment(Handler):
             error = "Only the user who created this comment can modify it."
             self.render("error.html", error=error)
 
+
 class LikeComment(Handler):
     def post(self, post_id, comment_id):
         if self.user:
@@ -451,6 +474,7 @@ class LikeComment(Handler):
                 self.redirect("/%s" % str(post_id))
         else:
             self.redirect("/login")
+
 
 class UnlikeComment(Handler):
     def post(self, post_id, comment_id):
@@ -468,7 +492,7 @@ class UnlikeComment(Handler):
         else:
             self.redirect("/login")
 
-# make sure to create redirect success page
+
 class Welcome(Handler):
     def get(self):
         if self.user:
@@ -489,6 +513,5 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/welcome', Welcome),
-                               ('/logout', Logout)
-                              ],
+                               ('/logout', Logout)],
                               debug=True)
