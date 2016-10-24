@@ -333,7 +333,7 @@ class Login(Handler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/')
+            self.redirect('/welcome')
         else:
             error = 'Invalid login'
             self.render('login.html', error=error)
@@ -441,7 +441,7 @@ class LikeComment(Handler):
     def post(self, post_id, comment_id):
         if self.user:
             comment = get_item('Comment', comment_id)
-            likes = [x.encode("utf-8") for x in comment.likes]
+            likes = [u.encode("utf-8") for u in comment.likes]
             username = self.user.name
             if username in likes or username == comment.username:
                 self.redirect("/%s" % str(post_id))
@@ -456,7 +456,7 @@ class UnlikeComment(Handler):
     def post(self, post_id, comment_id):
         if self.user:
             comment = get_item('Comment', comment_id)
-            likes = [x.encode("utf-8") for x in comment.likes]
+            likes = [u.encode("utf-8") for u in comment.likes]
             username = self.user.name
             if username in likes or username == comment.username:
                 likes.remove(username)
@@ -474,7 +474,7 @@ class Welcome(Handler):
         if self.user:
             self.render('welcome.html', username=self.user.name)
         else:
-            self.redirect('/signup')
+            self.redirect('/login')
 
 app = webapp2.WSGIApplication([('/', Blog),
                                ('/new_post', AddPost),
