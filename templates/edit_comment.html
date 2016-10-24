@@ -15,7 +15,12 @@
     aria-described-by="helpBlockTitle">{{ c.comment_text }}</textarea>
     <div id="helpBlockText" class="help-block">{{ text_error }}</div>
   </div>
-  <button type="submit" class="btn btn-default">Submit</button>
+  <button type="submit" class="btn btn-default" name ="action" value="edit">
+  Submit
+  </button>
+  <button type="submit" class="btn btn-danger" name ="action" value="delete">
+  Delete
+  </button>
   <a class="btn btn-default" href="/{{ post_id }}" role="button">Cancel</a>
 </form>
 

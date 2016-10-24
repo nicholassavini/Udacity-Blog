@@ -177,7 +177,7 @@ class EditPost(Handler):
                     post.put()
 
                     self.redirect("/%s" % str(post_id))
-            else:
+            elif self.request.get("action") == "delete":
                 ndb.Key('Post', int(post_id)).delete()
                 comments = Comment.query(Comment.post_id==post_id)
                 keys = comments.fetch(keys_only=True)
@@ -389,6 +389,7 @@ class AddComment(Handler):
 class EditComment(Handler):
     def get(self, post_id, comment_id):
         if self.user:
+
             comment = get_item('Comment', comment_id)
             post = get_item('Post', post_id)
             if comment.username == self.user.name:
@@ -403,40 +404,35 @@ class EditComment(Handler):
     def post(self, post_id, comment_id):
         comment = get_item('Comment', comment_id)
         if comment.username == self.user.name:
-            comment_title = self.request.get("comment_title")
-            comment_text = self.request.get("comment_text")
+            if self.request.get("action") == "edit":
+                comment_title = self.request.get("comment_title")
+                comment_text = self.request.get("comment_text")
 
-            params = dict(comment_title=comment_title,
-                          comment_text=comment_text, c=comment)
-            has_error = False
-            if not comment_title:
-                params['title_class'] = "has-error"
-                params['title_error'] = "We need a comment title!"
-                has_error = True
-            if not comment_text:
-                params['text_class'] = "has-error"
-                params['text_error'] = "We need a comment body!"
-                has_error = True
+                params = dict(comment_title=comment_title,
+                              comment_text=comment_text, c=comment)
+                has_error = False
+                if not comment_title:
+                    params['title_class'] = "has-error"
+                    params['title_error'] = "We need a comment title!"
+                    has_error = True
+                if not comment_text:
+                    params['text_class'] = "has-error"
+                    params['text_error'] = "We need a comment body!"
+                    has_error = True
 
-            if has_error:
-                params['post_id'] = post_id
-                self.render("edit_comment.html", **params)
-            else:
-                comment.comment_title = self.request.get("comment_title")
-                comment.comment_text = self.request.get("comment_text")
-                comment.put()
+                if has_error:
+                    params['post_id'] = post_id
+                    self.render("edit_comment.html", **params)
+                else:
+                    comment.comment_title = self.request.get("comment_title")
+                    comment.comment_text = self.request.get("comment_text")
+                    comment.put()
+
+                    self.redirect("/%s" % str(post_id))
+            elif self.request.get("action") == "delete":
+                ndb.Key('Comment', int(comment_id)).delete()
 
                 self.redirect("/%s" % str(post_id))
-        else:
-            error = "Only the user who created this comment can modify it."
-            self.render("error.html", error=error)
-
-class DeleteComment(Handler):
-    def get(self, post_id, comment_id):
-        comment = get_item('Comment', comment_id)
-        if comment.username == self.user.name:
-            ndb.Key('Comment', int(comment_id)).delete()
-            self.redirect("/%s" % str(post_id))
         else:
             error = "Only the user who created this comment can modify it."
             self.render("error.html", error=error)
@@ -488,7 +484,6 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/unlike', UnlikePost),
                                ('/([0-9]+)/add_comment', AddComment),
                                ('/([0-9]+)/([0-9]+)/edit', EditComment),
-                               ('/([0-9]+)/([0-9]+)/delete', DeleteComment),
                                ('/([0-9]+)/([0-9]+)/like', LikeComment),
                                ('/([0-9]+)/([0-9]+)/unlike', UnlikeComment),
                                ('/signup', Register),
