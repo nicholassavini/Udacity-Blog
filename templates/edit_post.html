@@ -15,8 +15,12 @@
     aria-described-by="helpBlockTitle">{{ p.post_text }}</textarea>
     <div id="helpBlockText" class="help-block">{{ text_error }}</div>
   </div>
-  <button type="submit" class="btn btn-default" name ="action" value="edit">Submit</button>
-  <button type="submit" class="btn btn-danger" name ="action" value="delete">Delete</button>
+  <button type="submit" class="btn btn-default" name ="action" value="edit">
+  Submit
+  </button>
+  <button type="submit" class="btn btn-danger" name ="action" value="delete">
+  Delete
+  </button>
   <a class="btn btn-default" href="/{{p.key.id()}}" role="button">Cancel</a>
 </form>
 {% endblock %}
