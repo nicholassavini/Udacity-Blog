@@ -402,7 +402,6 @@ class Comment(ndb.Model):
         return render_str("comment.html", c=self)
 
 
-# These are probably supposed to support HTML
 class AddComment(Handler):
     def post(self, post_id):
         if self.user:

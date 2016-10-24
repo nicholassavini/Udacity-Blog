@@ -15,7 +15,8 @@
             <div class="col-md-6">
                 <p class="username text-right">
                     {% if user %}
-                        {{user.name}} (<a class="login-link" href="/logout">logout</a>)
+                        {{ user.name }}
+                        (<a class="login-link" href="/logout">logout</a>)
                     {% else %}
                         <a class="login-link" href="/login">login</a>
                         |

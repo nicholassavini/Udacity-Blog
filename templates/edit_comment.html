@@ -5,8 +5,9 @@
 <form method="post">
   <div class="form-group {{ title_class }}">
     <label class="control-label" for="comment_title">Title</label>
-    <input class="form-control" type="text" name="comment_title" id="comment_title"
-    value="{{ c.comment_title }}" aria-described-by="helpBlockTitle">
+    <input class="form-control" type="text" name="comment_title"
+    id="comment_title" value="{{ c.comment_title }}"
+    aria-described-by="helpBlockTitle">
     <div id="helpBlockTitle" class="help-block">{{ title_error }}</div>
   </div>
   <div class="form-group {{ text_class }}">
