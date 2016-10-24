@@ -3,16 +3,20 @@
 {% block content %}
 <h2>Edit Comments</h2>
 <form method="post">
-  <div class="form-group">
-    <label for="comment_title">Title</label>
-    <input class="form-control" type="text" name="comment_title" id="comment_title" value="{{c.comment_title}}">
+  <div class="form-group {{ title_class }}">
+    <label class="control-label" for="comment_title">Title</label>
+    <input class="form-control" type="text" name="comment_title" id="comment_title"
+    value="{{ c.comment_title }}" aria-described-by="helpBlockTitle">
+    <div id="helpBlockTitle" class="help-block">{{ title_error }}</div>
   </div>
-  <div class="form-group">
-    <label for="comment_text">Body</label>
-    <textarea class="form-control" name="comment_text" id="comment_text">{{c.comment_text}}</textarea>
+  <div class="form-group {{ text_class }}">
+    <label class="control-label"  for="comment_text">Body</label>
+    <textarea class="form-control" name="comment_text" id="comment_text"
+    aria-described-by="helpBlockTitle">{{ c.comment_text }}</textarea>
+    <div id="helpBlockText" class="help-block">{{ text_error }}</div>
   </div>
-  <div class="help-block error-text">{{error}}</div>
   <button type="submit" class="btn btn-default">Submit</button>
-  <a class="btn btn-danger" href="/{{p.key.id()}}" role="button">Cancel</a>
+  <a class="btn btn-default" href="/{{ post_id }}" role="button">Cancel</a>
 </form>
+
 {% endblock %}

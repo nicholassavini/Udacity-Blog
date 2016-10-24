@@ -138,13 +138,17 @@ class Permalink(Handler):
 
 class EditPost(Handler):
     def get(self, post_id):
-        post = get_item('Post', post_id)
-        if post.created_by == self.user.name:
-            self.render('edit_post.html', p=post)
-        else:
-            error = "Only the user who created this post can modify it."
+        if self.user:
+            post = get_item('Post', post_id)
+            if post.created_by == self.user.name:
+                self.render('edit_post.html', p=post)
+            else:
+                error = "Only the user who created this post can modify it."
 
-            self.render("error.html", error=error)
+                self.render("error.html", error=error)
+        else:
+            self.redirect("/login")
+
 
     def post(self, post_id):
         post = get_item('Post', post_id)
@@ -384,24 +388,48 @@ class AddComment(Handler):
 
 class EditComment(Handler):
     def get(self, post_id, comment_id):
-        comment = get_item('Comment', comment_id)
-        post = get_item('Post', post_id)
-        if comment.username == self.user.name:
-            self.render('edit_comment.html', c=comment, p=post)
+        if self.user:
+            comment = get_item('Comment', comment_id)
+            post = get_item('Post', post_id)
+            if comment.username == self.user.name:
+                self.render('edit_comment.html', c=comment, p=post)
+            else:
+                error = "Only the user who created this comment can modify it."
+                self.render("error.html", error=error)
         else:
-            error = "Only the user who created this comment can modify it."
-            self.render("error.html", error=error)
+            self.redirect("/login")
+
 
     def post(self, post_id, comment_id):
-        if self.user:
-                c = get_item('Comment', comment_id)
-                c.comment_title = self.request.get("comment_title")
-                c.comment_text = self.request.get("comment_text")
-                c.put()
+        comment = get_item('Comment', comment_id)
+        if comment.username == self.user.name:
+            comment_title = self.request.get("comment_title")
+            comment_text = self.request.get("comment_text")
+
+            params = dict(comment_title=comment_title,
+                          comment_text=comment_text, c=comment)
+            has_error = False
+            if not comment_title:
+                params['title_class'] = "has-error"
+                params['title_error'] = "We need a comment title!"
+                has_error = True
+            if not comment_text:
+                params['text_class'] = "has-error"
+                params['text_error'] = "We need a comment body!"
+                has_error = True
+
+            if has_error:
+                params['post_id'] = post_id
+                self.render("edit_comment.html", **params)
+            else:
+                comment.comment_title = self.request.get("comment_title")
+                comment.comment_text = self.request.get("comment_text")
+                comment.put()
 
                 self.redirect("/%s" % str(post_id))
         else:
-            self.redirect("/login")
+            error = "Only the user who created this comment can modify it."
+            self.render("error.html", error=error)
 
 class DeleteComment(Handler):
     def get(self, post_id, comment_id):
