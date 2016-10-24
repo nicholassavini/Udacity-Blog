@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 import os
 import re
-import jinja2
-import webapp2
 import random
 from string import letters
 import hashlib
 import hmac
-
+import webapp2
+import jinja2
 from google.appengine.ext import ndb
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
@@ -33,38 +32,48 @@ def check_secure_val(secure_val):
 
 
 class Handler(webapp2.RequestHandler):
+    """ Doc """
     def write(self, *a, **kw):
+        """ Doc """
         self.response.out.write(*a, **kw)
 
     def render_str(self, template, **params):
+        """ Doc """
         params['user'] = self.user
         return render_str(template, **params)
 
     def render(self, template, **kw):
+        """ Doc """
         self.write(self.render_str(template, **kw))
 
     def set_secure_cookie(self, name, val):
+        """ Doc """
         cookie_val = make_secure_val(val)
         self.response.headers.add_header('Set-Cookie',
                                          '%s=%s; Path=/' % (name, cookie_val))
 
     def read_secure_cookie(self, name):
+        """ Doc """
         cookie_val = self.request.cookies.get(name)
         return cookie_val and check_secure_val(cookie_val)
 
     def login(self, user):
+        """ Doc """
         self.set_secure_cookie('user_id', str(user.key.id()))
 
     def logout(self):
+        """ Doc """
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
     def initialize(self, *a, **kw):
+        """ Doc """
         webapp2.RequestHandler.initialize(self, *a, **kw)
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
 
 class Post(ndb.Model):
+    """ Doc """
     post_title = ndb.StringProperty(required=True)
     post_text = ndb.TextProperty(required=True)
     post_created = ndb.DateTimeProperty(auto_now_add=True)
@@ -73,6 +82,7 @@ class Post(ndb.Model):
     likes = ndb.StringProperty(repeated=True)
 
     def render_post(self):
+        """ Doc """
         self._render_text = self.post_text.replace('\n', '<br>')
         return render_str("post.html", p=self)
 
@@ -80,61 +90,68 @@ class Post(ndb.Model):
 # Blog Presentation
 
 class Blog(Handler):
+    """ Doc """
     def get(self):
+        """ Doc """
         posts = Post.query().order(-Post.post_created)
         self.render("front.html", posts=posts, username=self.user)
 
 
 class AddPost(Handler):
+    """ Doc """
     def get(self):
+        """ Doc """
         if self.user:
             self.render("new_post.html")
         else:
             self.redirect("/login")
 
     def post(self):
+        """ Doc """
         if self.user:
-                post_title = self.request.get("post_title")
-                post_text = self.request.get("post_text")
-                created_by = self.user.name
+            post_title = self.request.get("post_title")
+            post_text = self.request.get("post_text")
+            created_by = self.user.name
 
-                params = dict(post_title=post_title, post_text=post_text)
-                has_error = False
-                if not post_title:
-                    params['title_class'] = "has-error"
-                    params['title_error'] = "We need a post title!"
-                    has_error = True
-                if not post_text:
-                    params['text_class'] = "has-error"
-                    params['text_error'] = "We need a post body!"
-                    has_error = True
+            params = dict(post_title=post_title, post_text=post_text)
+            has_error = False
+            if not post_title:
+                params['title_class'] = "has-error"
+                params['title_error'] = "We need a post title!"
+                has_error = True
+            if not post_text:
+                params['text_class'] = "has-error"
+                params['text_error'] = "We need a post body!"
+                has_error = True
 
-                if has_error:
-                    self.render("new_post.html", **params)
-                else:
-                    p = Post(post_title=post_title, post_text=post_text,
-                             created_by=created_by)
-                    p.put()
+            if has_error:
+                self.render("new_post.html", **params)
+            else:
+                p = Post(post_title=post_title, post_text=post_text,
+                         created_by=created_by)
+                p.put()
 
-                    self.redirect("/%s" % str(p.key.id()))
+                self.redirect("/%s" % str(p.key.id()))
         else:
             self.redirect("/login")
 
 
 def get_item(item_type, item_id):
-        post = ndb.Key(item_type, int(item_id)).get()
-        return post
+    post = ndb.Key(item_type, int(item_id)).get()
+    return post
 
 
 # consider splitting this into two functions for reusability
 def get_comments(post_id):
-        comments = Comment.query(Comment.post_id == post_id)
-        comments = comments.order(Comment.comment_date)
-        return comments
+    comments = Comment.query(Comment.post_id == post_id)
+    comments = comments.order(Comment.comment_date)
+    return comments
 
 
 class Permalink(Handler):
+    """ Doc """
     def get(self, post_id):
+        """ Doc """
         post = get_item('Post', post_id)
         comments = get_comments(post_id)
         if not post:
@@ -145,7 +162,9 @@ class Permalink(Handler):
 
 
 class EditPost(Handler):
+    """ Doc """
     def get(self, post_id):
+        """ Doc """
         if self.user:
             post = get_item('Post', post_id)
             if post.created_by == self.user.name:
@@ -158,6 +177,7 @@ class EditPost(Handler):
             self.redirect("/login")
 
     def post(self, post_id):
+        """ Doc """
         post = get_item('Post', post_id)
         if post.created_by == self.user.name:
             if self.request.get("action") == "edit":
@@ -198,7 +218,9 @@ class EditPost(Handler):
 
 
 class LikePost(Handler):
+    """ Doc """
     def post(self, post_id):
+        """ Doc """
         if self.user:
             post = get_item('Post', post_id)
             likes = [l.encode("utf-8") for l in post.likes]
@@ -373,6 +395,11 @@ class Comment(ndb.Model):
     post_id = ndb.StringProperty(required=True)
     comment_date = ndb.DateTimeProperty(auto_now_add=True)
     likes = ndb.StringProperty(repeated=True)
+
+    def render_comments(self):
+        """ Doc """
+        self._render_text = self.comment_text.replace('\n', '<br>')
+        return render_str("comment.html", c=self)
 
 
 # These are probably supposed to support HTML
