@@ -233,14 +233,25 @@ class Blog(Handler):
         self.render("front.html", posts=posts, username=self.user)
 
 
-class AddPost(Handler):
-    """ Allows for the addition of a new post """
-    def get(self):
-        """ Renders the new post page if the user is logged in """
+
+def validate_user(Handler):
+    def authorize(self, *args, **kwargs):
         if self.user:
-            self.render("new_post.html")
+            return Handler(self, *args, **kwargs)
         else:
             self.redirect("/login")
+    return authorize
+
+
+class AddPost(Handler):
+    """ Allows for the addition of a new post """
+    @validate_user
+    def get(self):
+        """ Renders the new post page if the user is logged in """
+        #if self.user:
+        self.render("new_post.html")
+        #else:
+        #    self.redirect("/login")
 
     def post(self):
         """
