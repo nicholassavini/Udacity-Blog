@@ -287,6 +287,10 @@ class Permalink(Handler):
         """
         post = get_item('Post', post_id)
         comments = get_comments(post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
 
         self.render("permalink.html", p=post, comments=comments)
 
