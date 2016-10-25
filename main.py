@@ -235,6 +235,7 @@ class Blog(Handler):
 
 
 def user_required(func):
+    """ makes sure that the user is logged in """
     def check_user(self, *args, **kwargs):
         if self.user:
             return func(self, *args, **kwargs)
@@ -277,8 +278,10 @@ class AddPost(Handler):
             p.put()
             self.redirect("/%s" % str(p.key.id()))
 
+
 class Permalink(Handler):
     """ Allows for each post to have a permalink page """
+
     def get(self, post_id):
         """
         Gets the post and all its associated comments and then renders the
@@ -303,6 +306,10 @@ class EditPost(Handler):
         if the logged in user is the user who created the post
         """
         post = get_item('Post', post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
 
         if post.created_by == self.user.name:
             self.render('edit_post.html', p=post)
@@ -317,6 +324,10 @@ class EditPost(Handler):
         user is the user who created the post
         """
         post = get_item('Post', post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
 
         if post.created_by == self.user.name:
             post_title = self.request.get("post_title")
@@ -347,6 +358,11 @@ class DeletePost(Handler):
     @user_required
     def post(self, post_id):
         post = get_item('Post', post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
+
         if post.created_by == self.user.name:
             ndb.Key('Post', int(post_id)).delete()
             # Deletes the commments associated with the given post
@@ -367,6 +383,11 @@ class LikePost(Handler):
         new like the post
         """
         post = get_item('Post', post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
+
         likes = [l.encode("utf-8") for l in post.likes]
         username = self.user.name
         if username in likes or username == post.created_by:
@@ -383,6 +404,11 @@ class UnlikePost(Handler):
     def post(self, post_id):
         """ If the user liked the post, removes their like """
         post = get_item('Post', post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
+
         likes = [l.encode("utf-8") for l in post.likes]
         likes.remove(self.user.name)
         post.likes = likes
@@ -506,6 +532,12 @@ class AddComment(Handler):
         comment entity is created for the given post. If there is an error, a
         new comment template is rendered with the values provided
         """
+        post = get_item('Post', post_id)
+        if not post:
+            self.error(404)
+            self.render("404.html")
+            return
+
         username = self.user.name
         comment_title = self.request.get("comment_title")
         comment_text = self.request.get("comment_text")
@@ -542,6 +574,11 @@ class EditComment(Handler):
         """
         comment = get_item('Comment', comment_id)
         post = get_item('Post', post_id)
+        if not post or not comment:
+            self.error(404)
+            self.render("404.html")
+            return
+
         if comment.username == self.user.name:
             self.render('edit_comment.html', c=comment, p=post)
         else:
@@ -555,6 +592,12 @@ class EditComment(Handler):
         logged in user is the user who created the comment
         """
         comment = get_item('Comment', comment_id)
+        post = get_item('Post', post_id)
+        if not post or not comment:
+            self.error(404)
+            self.render("404.html")
+            return
+
         if comment.username == self.user.name:
             if self.request.get("action") == "edit":
                 comment_title = self.request.get("comment_title")
@@ -595,6 +638,12 @@ class DeleteComment(Handler):
     @user_required
     def post(self, post_id, comment_id):
         comment = get_item('Comment', comment_id)
+        post = get_item('Post', post_id)
+        if not post or not comment:
+            self.error(404)
+            self.render("404.html")
+            return
+
         if comment.username == self.user.name:
             ndb.Key('Comment', int(comment_id)).delete()
             self.redirect("/%s" % str(post_id))
@@ -612,6 +661,12 @@ class LikeComment(Handler):
         adds a new like to the comment
         """
         comment = get_item('Comment', comment_id)
+        post = get_item('Post', post_id)
+        if not post or not comment:
+            self.error(404)
+            self.render("404.html")
+            return
+
         likes = [u.encode("utf-8") for u in comment.likes]
         username = self.user.name
         if username in likes or username == comment.username:
@@ -628,6 +683,12 @@ class UnlikeComment(Handler):
     def post(self, post_id, comment_id):
         """ If the user liked the comment, removes their like """
         comment = get_item('Comment', comment_id)
+        post = get_item('Post', post_id)
+        if not post or not comment:
+            self.error(404)
+            self.render("404.html")
+            return
+
         likes = [u.encode("utf-8") for u in comment.likes]
         username = self.user.name
         if username in likes or username == comment.username:
