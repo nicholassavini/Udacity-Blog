@@ -277,7 +277,6 @@ class AddPost(Handler):
             p.put()
             self.redirect("/%s" % str(p.key.id()))
 
-
 class Permalink(Handler):
     """ Allows for each post to have a permalink page """
     def get(self, post_id):
