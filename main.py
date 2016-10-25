@@ -418,7 +418,6 @@ class UnlikePost(Handler):
         post.put()
         self.redirect("/%s" % str(post.key.id()))
 
-#### technically this should redirect to signup, not login
 class Welcome(Handler):
     """ Provides the newly logged in user with a welcome message """
     @user_required
@@ -428,7 +427,6 @@ class Welcome(Handler):
 
 # User Handlers
 
-#### should probably check if user is already logged in
 class Signup(Handler):
     """ Allows someone to register as a new user """
     def get(self):
