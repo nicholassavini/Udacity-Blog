@@ -97,7 +97,19 @@ def valid_email(email):
     return EMAIL_RE.match(email)
 
 
+def user_required(func):
+    """ makes sure that the user is logged in """
+    def check_user(self, *args, **kwargs):
+        """ makes sure that the user is logged in """
+        if self.user:
+            return func(self, *args, **kwargs)
+        else:
+            self.redirect("/login")
+    return check_user
+
 # Data Models
+
+
 class Post(ndb.Model):
     """
     Creates an instance of the class that allows for the creation of new blog
@@ -234,17 +246,6 @@ class Blog(Handler):
         self.render("front.html", posts=posts, username=self.user)
 
 
-def user_required(func):
-    """ makes sure that the user is logged in """
-    def check_user(self, *args, **kwargs):
-        """ makes sure that the user is logged in """
-        if self.user:
-            return func(self, *args, **kwargs)
-        else:
-            self.redirect("/login")
-    return check_user
-
-
 class AddPost(Handler):
     """ Allows for the addition of a new post """
     @user_required
@@ -275,7 +276,7 @@ class AddPost(Handler):
             self.render("new_post.html", **params)
         else:
             p = Post(post_title=post_title, post_text=post_text,
-                        created_by=created_by)
+                     created_by=created_by)
             p.put()
             self.redirect("/%s" % str(p.key.id()))
 
@@ -355,6 +356,7 @@ class EditPost(Handler):
 
             self.render("error.html", error=error)
 
+
 class DeletePost(Handler):
     """ Allows for a post and its associated comments to be deleted """
     @user_required
@@ -376,6 +378,7 @@ class DeletePost(Handler):
         else:
             error = "Only the user who created this post can modify it."
             self.render("error.html", error=error)
+
 
 class LikePost(Handler):
     """ Allows a post to be liked """
@@ -418,6 +421,7 @@ class UnlikePost(Handler):
         post.put()
         self.redirect("/%s" % str(post.key.id()))
 
+
 class Welcome(Handler):
     """ Provides the newly logged in user with a welcome message """
     @user_required
@@ -426,6 +430,7 @@ class Welcome(Handler):
         self.render('welcome.html', username=self.user.name)
 
 # User Handlers
+
 
 class Signup(Handler):
     """ Allows someone to register as a new user """
@@ -543,7 +548,7 @@ class AddComment(Handler):
         comment_title = self.request.get("comment_title")
         comment_text = self.request.get("comment_text")
         params = dict(comment_title=comment_title,
-                        comment_text=comment_text)
+                      comment_text=comment_text)
         has_error = False
         if not comment_title:
             # This sets the "has-error" class for Bootstrap
@@ -562,7 +567,6 @@ class AddComment(Handler):
                         comment_text=comment_text, post_id=post_id)
             c.put()
             self.redirect("/%s" % str(post_id))
-
 
 
 class EditComment(Handler):
