@@ -237,6 +237,7 @@ class Blog(Handler):
 def user_required(func):
     """ makes sure that the user is logged in """
     def check_user(self, *args, **kwargs):
+        """ makes sure that the user is logged in """
         if self.user:
             return func(self, *args, **kwargs)
         else:
@@ -355,8 +356,10 @@ class EditPost(Handler):
             self.render("error.html", error=error)
 
 class DeletePost(Handler):
+    """ Allows for a post and its associated comments to be deleted """
     @user_required
     def post(self, post_id):
+        """ Runs the post request to delete and post """
         post = get_item('Post', post_id)
         if not post:
             self.error(404)
@@ -635,8 +638,10 @@ class EditComment(Handler):
 
 
 class DeleteComment(Handler):
+    """ Allows for a comment to be deleted """
     @user_required
     def post(self, post_id, comment_id):
+        """ Runs post request to delete comments """
         comment = get_item('Comment', comment_id)
         post = get_item('Post', post_id)
         if not post or not comment:
