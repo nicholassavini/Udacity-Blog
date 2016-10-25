@@ -19,3 +19,7 @@ a.comments {
     color: black;
     text-decoration: none;
 }
+
+.delete {
+    margin-top: 5px;
+}

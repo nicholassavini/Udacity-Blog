@@ -604,36 +604,29 @@ class EditComment(Handler):
             return
 
         if comment.username == self.user.name:
-            if self.request.get("action") == "edit":
-                comment_title = self.request.get("comment_title")
-                comment_text = self.request.get("comment_text")
-
-                params = dict(comment_title=comment_title,
-                              comment_text=comment_text, c=comment)
-                has_error = False
-                if not comment_title:
-                    # This sets the "has-error" class for Bootstrap
-                    params['title_class'] = "has-error"
-                    params['title_error'] = "We need a comment title!"
-                    has_error = True
-                if not comment_text:
-                    params['text_class'] = "has-error"
-                    params['text_error'] = "We need a comment body!"
-                    has_error = True
-
-                if has_error:
-                    params['post_id'] = post_id
-                    self.render("edit_comment.html", **params)
-                else:
-                    comment.comment_title = self.request.get("comment_title")
-                    comment.comment_text = self.request.get("comment_text")
-                    comment.put()
-
-                    self.redirect("/%s" % str(post_id))
-            elif self.request.get("action") == "delete":
-                ndb.Key('Comment', int(comment_id)).delete()
-
+            comment_title = self.request.get("comment_title")
+            comment_text = self.request.get("comment_text")
+            params = dict(comment_title=comment_title,
+                            comment_text=comment_text, c=comment)
+            has_error = False
+            if not comment_title:
+                # This sets the "has-error" class for Bootstrap
+                params['title_class'] = "has-error"
+                params['title_error'] = "We need a comment title!"
+                has_error = True
+            if not comment_text:
+                params['text_class'] = "has-error"
+                params['text_error'] = "We need a comment body!"
+                has_error = True
+            if has_error:
+                params['post_id'] = post_id
+                self.render("edit_comment.html", **params)
+            else:
+                comment.comment_title = self.request.get("comment_title")
+                comment.comment_text = self.request.get("comment_text")
+                comment.put()
                 self.redirect("/%s" % str(post_id))
+
         else:
             error = "Only the user who created this comment can modify it."
             self.render("error.html", error=error)
