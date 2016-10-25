@@ -346,6 +346,10 @@ class DeletePost(Handler):
         post = get_item('Post', post_id)
         if post.created_by == self.user.name:
             ndb.Key('Post', int(post_id)).delete()
+            # Deletes the commments associated with the given post
+            comments = Comment.query(Comment.post_id == post_id)
+            keys = comments.fetch(keys_only=True)
+            ndb.delete_multi(keys)
             self.redirect("/")
         else:
             error = "Only the user who created this post can modify it."
@@ -584,6 +588,18 @@ class EditComment(Handler):
             self.render("error.html", error=error)
 
 
+class DeleteComment(Handler):
+    @user_required
+    def post(self, post_id, comment_id):
+        comment = get_item('Comment', comment_id)
+        if comment.username == self.user.name:
+            ndb.Key('Comment', int(comment_id)).delete()
+            self.redirect("/%s" % str(post_id))
+        else:
+            error = "Only the user who created this comment can modify it."
+            self.render("error.html", error=error)
+
+
 class LikeComment(Handler):
     """ Allows for a comment to be liked """
     @user_required
@@ -629,6 +645,7 @@ app = webapp2.WSGIApplication([('/', Blog),
                                ('/([0-9]+)/unlike', UnlikePost),
                                ('/([0-9]+)/add_comment', AddComment),
                                ('/([0-9]+)/([0-9]+)/edit', EditComment),
+                               ('/([0-9]+)/([0-9]+)/delete', DeleteComment),
                                ('/([0-9]+)/([0-9]+)/like', LikeComment),
                                ('/([0-9]+)/([0-9]+)/unlike', UnlikeComment),
                                ('/signup', Register),
