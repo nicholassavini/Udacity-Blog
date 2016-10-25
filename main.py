@@ -401,7 +401,7 @@ class LikePost(Handler):
         else:
             post.likes.append(username)
             post.put()
-            self.redirect("/")
+            self.redirect("/%s" % str(post.key.id()))
 
 
 class UnlikePost(Handler):
@@ -607,7 +607,7 @@ class EditComment(Handler):
             comment_title = self.request.get("comment_title")
             comment_text = self.request.get("comment_text")
             params = dict(comment_title=comment_title,
-                            comment_text=comment_text, c=comment)
+                          comment_text=comment_text, c=comment)
             has_error = False
             if not comment_title:
                 # This sets the "has-error" class for Bootstrap
